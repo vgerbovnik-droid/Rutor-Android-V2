@@ -15,10 +15,19 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Configure Android SDK
+        shell: bash
         run: |
-          echo "ANDROID_HOME=$ANDROID_SDK_ROOT" >> "$GITHUB_ENV"
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager --install \
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -n 1)"
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "Android SDK command-line tools not found"
+            exit 1
+          fi
+          echo "Using $SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses || true
+          "$SDKMANAGER" --install \
             "platform-tools" \
             "platforms;android-35" \
             "build-tools;35.0.0"
